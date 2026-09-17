@@ -39,6 +39,12 @@ NAMESPACE_ALIASES = {
     "settings.subscriptions": "dsh-subscriptions",
 }
 
+# The carried-over corpus contains a handful of strings that were only half
+# translated upstream (mixed Russian and English inside one value). Rather than
+# editing the vendored files — which are refreshed from upstream — corrections
+# live here and are applied last.
+OVERRIDES_FILE = "overrides.json"
+
 
 def load_english() -> dict[str, dict[str, str]]:
     merged: dict[str, dict[str, str]] = {}
@@ -54,13 +60,28 @@ def load_english() -> dict[str, dict[str, str]]:
 
 
 def load_russian() -> dict[str, dict[str, str]]:
+    """Merge every vendored Russian file, skipping malformed entries.
+
+    `overrides.json` is applied last and wins. Non-string values are dropped:
+    a literal null carried in from upstream must never reach the bundle.
+    """
     merged: dict[str, dict[str, str]] = {}
-    for path in sorted(glob.glob(os.path.join(VENDOR, "*.json"))):
+    paths = sorted(glob.glob(os.path.join(VENDOR, "*.json")))
+    paths.sort(key=lambda path: os.path.basename(path) == OVERRIDES_FILE)
+    for path in paths:
         with open(path, encoding="utf-8") as fh:
             data = json.load(fh)
         for ns, entries in data.items():
-            if isinstance(entries, dict):
-                merged.setdefault(ns, {}).update(entries)
+            if not isinstance(entries, dict):
+                continue
+            clean = {k: v for k, v in entries.items() if isinstance(v, str)}
+            dropped = len(entries) - len(clean)
+            if dropped:
+                print(
+                    f"  ! {os.path.basename(path)}: dropped {dropped} non-string value(s) in {ns}",
+                    file=sys.stderr,
+                )
+            merged.setdefault(ns, {}).update(clean)
     return merged
 
 
