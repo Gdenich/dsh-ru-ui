@@ -1,0 +1,11 @@
+# dsh-ru-ui — loader row.
+#
+# The host half registers nothing (lib/index.js); the whole translation lives in
+# the browser bundle (lib/client.js). This row exists so the client-modules
+# scanner sees the package in the loader tree and serves its bundle to the page.
+#
+# The row is inserted, never targeted by id, so a profile-level `disabled: true`
+# or a config override can still reach it by id (dsh-ru-ui).
+- insert:
+    - id: dsh-ru-ui
+      name: dsh-ru-ui

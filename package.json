@@ -1,0 +1,58 @@
+{
+  "name": "dsh-ru-ui",
+  "version": "1.0.0",
+  "description": "Russian interface translation for DeepSeek Harness (DSH): registers complete ru dictionaries for the DSH platform and its plugins, adds Russian to the language picker, and activates it on first run. Translation only — no typography, spell-check or layout-fix extras.",
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
+    }
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "i18n",
+    "locale",
+    "russian"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "python3 tools/build_ru.py && python3 tools/gen_dict_js.py",
+    "test": "python3 test/test_extract_en.py && python3 test/test_bundle.py",
+    "verify": "python3 tools/verify_coverage.py --app \"${DSH_APP:-/Applications/DSH Desktop.app/Contents/Resources/app}\" --profile \"${DSH_PROFILE:-$HOME/.dsh/profiles/desktop/node_modules}\"",
+    "audit": "python3 tools/audit_english.py",
+    "refresh": "DSH_APP=\"${DSH_APP:-/Applications/DSH Desktop.app/Contents/Resources/app}\" DSH_PROFILE=\"${DSH_PROFILE:-$HOME/.dsh/profiles/desktop/node_modules}\" sh -c 'python3 tools/extract_en.py \"$DSH_APP\" build/en-core.json && python3 tools/extract_en.py \"$DSH_PROFILE\" build/en-plugins.json && python3 tools/build_ru.py && python3 tools/gen_dict_js.py'",
+    "deploy": "bash tools/deploy.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/noxor/dsh-ru-ui.git"
+  }
+}
