@@ -49,7 +49,8 @@
     "verify": "python3 tools/verify_coverage.py --app \"${DSH_APP:-/Applications/DSH Desktop.app/Contents/Resources/app}\" --profile \"${DSH_PROFILE:-$HOME/.dsh/profiles/desktop/node_modules}\"",
     "audit": "python3 tools/audit_english.py",
     "refresh": "DSH_APP=\"${DSH_APP:-/Applications/DSH Desktop.app/Contents/Resources/app}\" DSH_PROFILE=\"${DSH_PROFILE:-$HOME/.dsh/profiles/desktop/node_modules}\" sh -c 'python3 tools/extract_en.py \"$DSH_APP\" build/en-core.json && python3 tools/extract_en.py \"$DSH_PROFILE\" build/en-plugins.json && python3 tools/build_ru.py && python3 tools/gen_dict_js.py'",
-    "deploy": "bash tools/deploy.sh"
+    "deploy": "bash tools/deploy.sh",
+    "pack": "bash tools/pack.sh"
   },
   "repository": {
     "type": "git",
