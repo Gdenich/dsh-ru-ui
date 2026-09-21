@@ -1,6 +1,9 @@
 # Extracted English inventories and composed translations are reproducible from
 # the installed DSH build; keep the repo to sources plus the shipped bundle.
 build/
+
+# macOS
+.DS_Store
 __pycache__/
 *.pyc
 node_modules/
