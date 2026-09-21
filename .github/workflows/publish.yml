@@ -1,0 +1,58 @@
+# Publish to npm when a version tag is pushed.
+#
+# The shipped browser bundle is a committed build artifact, so publishing is a
+# pure upload: nothing is compiled here. What this workflow does add is the
+# gate — a tag that does not match the manifest version, or a bundle that is not
+# reproducible from the dictionary, must never reach the registry.
+#
+# Setup (once): add an npm automation token as the NPM_TOKEN repository secret.
+#
+#   npm version patch && git push --follow-tags
+name: publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write # npm provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Tag must match the manifest version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$version" ]; then
+            echo "tag $GITHUB_REF_NAME does not match package.json version $version" >&2
+            exit 1
+          fi
+
+      # The dictionary is committed, so regenerating it must be a no-op; a diff
+      # means lib/client.js is stale relative to build/ru.json.
+      - name: Shipped bundle is reproducible
+        run: |
+          python3 tools/gen_dict_js.py
+          git diff --exit-code -- lib/client.js
+
+      - name: Bundle registers and activates
+        run: node test/run_bundle.mjs lib/client.js build/ru.json && node test/run_bundle_stale.mjs lib/client.js
+
+      - name: Tarball carries only the runtime files
+        run: npm publish --dry-run
+
+      - name: Publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
