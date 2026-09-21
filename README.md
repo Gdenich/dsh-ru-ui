@@ -1,5 +1,8 @@
 # dsh-ru-ui
 
+[![npm version](https://img.shields.io/npm/v/dsh-ru-ui.svg)](https://www.npmjs.com/package/dsh-ru-ui)
+[![license](https://img.shields.io/npm/l/dsh-ru-ui.svg)](LICENSE)
+
 Russian interface for **DeepSeek Harness** (DSH). Translation only.
 
 Registers 2,581 Russian strings across 49 namespaces for the DSH platform and its
@@ -10,8 +13,8 @@ model-output translation — those belong to
 which this plugin takes its translations from.
 
 ```bash
-dsh plugin --profile web add dsh-ru-ui
-dsh plugin --profile web add github:Gdenich/dsh-ru-ui
+dsh plugin --profile web add dsh-ru-ui                      # npm
+dsh plugin --profile web add github:Gdenich/dsh-ru-ui        # or straight from GitHub
 ```
 
 Restart DSH afterwards. For the app-managed `desktop` profile, run
