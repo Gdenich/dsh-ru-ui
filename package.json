@@ -1,7 +1,7 @@
 {
   "name": "dsh-ru-ui",
   "version": "1.0.0",
-  "description": "Russian interface translation for DeepSeek Harness (DSH): registers complete ru dictionaries for the DSH platform and its plugins, adds Russian to the language picker, and activates it on first run. Translation only — no typography, spell-check or layout-fix extras.",
+  "description": "Russian interface translation for DeepSeek Harness (DSH): registers complete ru dictionaries for the DSH platform and its plugins, adds Russian to the language picker, and activates it on first run. Translation only - no typography, spell-check or layout-fix extras.",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -38,10 +38,15 @@
     "dsh-plugin",
     "i18n",
     "locale",
-    "russian"
+    "russian",
+    "localization",
+    "translation"
   ],
   "engines": {
     "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "python3 tools/build_ru.py && python3 tools/gen_dict_js.py",
@@ -52,8 +57,12 @@
     "deploy": "bash tools/deploy.sh",
     "pack": "bash tools/pack.sh"
   },
+  "homepage": "https://github.com/Gdenich/dsh-ru-ui#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/noxor/dsh-ru-ui.git"
+    "url": "git+https://github.com/Gdenich/dsh-ru-ui.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Gdenich/dsh-ru-ui/issues"
   }
 }

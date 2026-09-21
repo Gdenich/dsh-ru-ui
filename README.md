@@ -1,5 +1,31 @@
 # dsh-ru-ui
 
+Russian interface for **DeepSeek Harness** (DSH). Translation only.
+
+Registers 2,581 Russian strings across 49 namespaces for the DSH platform and its
+plugins, adds **Русский** to the language picker, and switches the interface on
+first run. No typography rewriting, no spell-check, no keyboard-layout fix, no
+model-output translation — those belong to
+[`@goodandready/dsh-russian-lang`](https://github.com/GooDAnDReaDY/dsh-russian-lang),
+which this plugin takes its translations from.
+
+```bash
+dsh plugin --profile web add dsh-ru-ui
+dsh plugin --profile web add github:Gdenich/dsh-ru-ui
+```
+
+Restart DSH afterwards. For the app-managed `desktop` profile, run
+`tools/deploy.sh desktop` (the CLI refuses that profile by design).
+
+Dictionaries are keyed by the English source strings DSH passes to its locale, so
+a DSH upgrade degrades gracefully to partial English instead of a broken
+interface. `npm run refresh` re-extracts and rebuilds for a specific DSH build.
+
+Canonical documentation is in Russian below (`README.md`); this section is the
+English summary.
+
+---
+
 Русский интерфейс для **DeepSeek Harness** (DSH) — только перевод, без ничего лишнего.
 
 Плагин добавляет в DSH полноценный русский язык: словари для ядра и плагинов,
@@ -44,20 +70,21 @@
 поэтому штатный CLI не только ставит пакет, но и **сам дописывает** его в
 `dsh.profile.bundles` (реконсиляция по установленному состоянию).
 
-### Обычный профиль (`web`, `tui`, свой)
-
 ```bash
-dsh plugin --profile web add /path/to/dsh-ru-ui
+# из реестра npm
+dsh plugin --profile web add dsh-ru-ui
+
+# прямо из GitHub
+dsh plugin --profile web add github:Gdenich/dsh-ru-ui
+
+# из локальной копии или архива
+dsh plugin --profile web add ./dsh-ru-ui
 ```
 
-Или из любой точки, где лежит распакованный пакет (см. «Перенос на другую
-машину»):
+Профиль создастся сам, если его ещё нет. После установки нужно **перезапустить
+DSH**.
 
-```bash
-dsh plugin --profile web add ~/dsh-ru-ui
-```
-
-Профиль создастся сам, если его ещё нет. Достаточно **перезапустить DSH**.
+`web` замените на имя своего профиля: `tui`, `desktop` (см. ниже) или любой свой.
 
 ### Профиль `desktop` (DSH Desktop)
 
@@ -73,9 +100,8 @@ tools/deploy.sh desktop          # положит симлинк, допишет
 
 ```bash
 cd ~/.dsh/profiles/desktop
-ln -s /path/to/dsh-ru-ui node_modules/dsh-ru-ui
-# в package.json: "dsh-ru-ui": "link:/path/to/dsh-ru-ui" в dependencies
-#                 и "dsh-ru-ui" в dsh.profile.bundles
+npm install --no-save dsh-ru-ui   # или: распаковать архив в node_modules/dsh-ru-ui
+# в package.json: "dsh-ru-ui" в dependencies и в dsh.profile.bundles
 ```
 
 Правка безопасна: список `bundles`, переставший совпадать с шаблоном поставки,
@@ -87,13 +113,19 @@ DSH Desktop**.
 ```bash
 # профиль собран из ожидаемых слоёв (работает для не-desktop профилей)
 dsh --profile web --dump-config | grep dsh-ru-ui
-
-# desktop-профиль CLI не отдаёт — им управляет приложение; проверяйте манифест
-python3 -c "import json;m=json.load(open('$HOME/.dsh/profiles/desktop/package.json'));print('dsh-ru-ui' in m['dsh']['profile']['bundles'])"
 ```
 
 Надёжнее всего — открыть интерфейс: «Настройки → Общие → Язык» должен содержать
 пункт «Русский», а сам интерфейс при первом запуске стать русским.
+
+## Обновление и удаление
+
+```bash
+dsh plugin --profile web update dsh-ru-ui    # npm/git-установка
+dsh plugin --profile web remove dsh-ru-ui    # bundles вычистится сам
+```
+
+Для `link:`-установки обновление — заменить содержимое каталога.
 
 ## Перенос на другую машину или профиль
 
@@ -121,39 +153,44 @@ dsh plugin --profile web add ./dsh-ru-ui        # bundles допишется с�
 
 ### Способы доставки
 
-| Способ | Команда | Когда подходит |
+| Способ | Установка | Когда подходит |
 |---|---|---|
-| Локальный каталог / архив | `dsh plugin add ./dsh-ru-ui` | самая простая передача; обновление — заменить каталог |
+| npm `dsh-ru-ui` | `dsh plugin add dsh-ru-ui` | много машин, обновление через `pnpm update` |
+| GitHub `Gdenich/dsh-ru-ui` | `dsh plugin add github:Gdenich/dsh-ru-ui` | без публикации в реестр |
+| Каталог / архив | `dsh plugin add ./dsh-ru-ui` | передача вручную, офлайн |
 | `link:` на рабочий каталог | `dsh plugin add /path/to/dsh-ru-plugin` | разработка: правки в `lib/client.js` подхватываются живьём |
-| npm | `dsh plugin add dsh-ru-ui` | много машин; нужна публикация в реестр |
-| git | `dsh plugin add github:user/dsh-ru-ui` | обновление через `pnpm update` |
 
-Для git-установки pnpm блокирует сборочные скрипты: если пакету понадобится
-`prepare`, его ключ придётся добавить в `allowBuilds` в
-`pnpm-workspace.yaml` профиля. Этому плагину собирать на месте нечего —
-`lib/client.js` уже собран и лежит в репозитории.
+Собирать на месте нечего: `lib/client.js` уже собран и лежит в репозитории, а
+`files[]` в манифесте ограничивает поставку шестью файлами. Поэтому для
+git-установки не нужны ни `prepare`, ни разрешения в `allowBuilds`.
 
-## Совместимость с другой версией DSH
+## Совместимость с версиями DSH
 
-**Код плагина** от версии DSH не зависит: он пользуется только публичным API
-локали (`register`, `addLanguage`, `setLocale`, `getLocale`, `subscribe`).
+**Код плагина** от версии не зависит: он пользуется только публичным API локали
+(`register`, `addLanguage`, `setLocale`, `getLocale`, `subscribe`).
 
-**Словарь** привязан к набору строк конкретной сборки — он и собирается из неё.
-Ключи это английские строки, поэтому на другой версии:
+**Словарь** привязан к набору строк той сборки, из которой собран. Ключи — это
+английские строки, которые DSH передаёт в локаль, поэтому на другой версии:
 
 * строки, которые есть в словаре, переводятся;
 * новые строки показываются по-английски;
 * исчезнувшие просто не используются.
 
-Ничего не ломается, интерфейс просто частично английский. Чтобы перевод
-догнать, на машине с нужной версией DSH (и с исходниками пакета):
+Ничего не ломается — интерфейс становится частично английским, а не пустым или
+сломанным. Это отдельно закрыто тестом `test/run_bundle_stale.mjs`: бандл с
+устаревшим и даже битым словарём всё равно регистрируется и активируется.
+
+Подтянуть перевод под свою сборку (нужны исходники пакета и установленный DSH):
 
 ```bash
 npm run refresh     # переизвлечь английские строки из этой сборки и пересобрать
 npm run verify      # покажет, что ещё не переведено
+npm run audit       # что совпадает с английским (имена и шаблоны — норма)
 ```
 
-Порядок и подробности — в разделе «Совместимость с новыми версиями DSH».
+`build_ru.py` выбрасывает устаревшие ключи и печатает, чего не хватает. Новые
+строки дописываются в `vendor/ru/gap-*.json` и пересобираются; правки поверх
+переносимого корпуса — в `vendor/ru/overrides.json`.
 
 ## Как это устроено
 
@@ -174,34 +211,6 @@ vendor/ru/              русские переводы (по файлу на г
 Словари вшиты в бандл, а не подгружаются файлом: загрузчик клиентских модулей DSH
 резолвит только пакеты из `dsh.client.inject`, поэтому `require('./dict.js')` там
 не работает.
-
-## Совместимость с новыми версиями DSH
-
-Ключи словаря — это **английские строки**, которые DSH передаёт в локаль. Поэтому
-обновление DSH ничего не ломает:
-
-* существующие строки продолжают переводиться;
-* новые строки, которых ещё нет в словаре, показываются по-английски;
-* исчезнувшие строки просто перестают использоваться.
-
-То есть новая версия DSH деградирует до частичного английского, а не до пустого
-или сломанного интерфейса.
-
-Чтобы подтянуть перевод после крупного обновления:
-
-```bash
-export DSH_APP="/Applications/DSH Desktop.app/Contents/Resources/app"
-export DSH_PROFILE="$HOME/.dsh/profiles/desktop/node_modules"
-
-python3 tools/extract_en.py "$DSH_APP" build/en-core.json        # английские строки ядра
-python3 tools/extract_en.py "$DSH_PROFILE" build/en-plugins.json # английские строки плагинов
-python3 tools/build_ru.py                                        # отчёт о покрытии
-python3 tools/verify_coverage.py --app "$DSH_APP" --profile "$DSH_PROFILE"
-python3 tools/gen_dict_js.py                                     # пересобрать бандл
-```
-
-`build_ru.py` выбрасывает устаревшие ключи и печатает, чего не хватает. Новые
-строки дописываются в `vendor/ru/gap-*.json` и пересобираются.
 
 ## Разработка
 
