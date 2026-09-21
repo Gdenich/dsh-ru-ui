@@ -1,6 +1,6 @@
 {
   "name": "dsh-ru-ui",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Russian interface translation for DeepSeek Harness (DSH): registers complete ru dictionaries for the DSH platform and its plugins, adds Russian to the language picker, and activates it on first run. Translation only - no typography, spell-check or layout-fix extras.",
   "license": "MIT",
   "type": "module",
