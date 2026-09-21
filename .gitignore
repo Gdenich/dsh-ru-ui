@@ -8,3 +8,8 @@ __pycache__/
 *.pyc
 node_modules/
 dist/
+
+# Local-only helper and notes: kept in the working tree, never published.
+# The recipes are specific to one maintainer's account and workflow.
+docs/publishing-recipe.md
+tools/preflight.sh
