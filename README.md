@@ -226,6 +226,9 @@ vendor/ru/              русские переводы (по файлу на г
 
 ## Разработка
 
+Порядок выпуска версии в npm и GitHub — в [docs/publishing-recipe.md](docs/publishing-recipe.md),
+вместе с предполётной проверкой `tools/preflight.sh`.
+
 ```bash
 python3 test/test_extract_en.py   # фикстуры парсера бандлов
 python3 test/test_bundle.py       # сборка воспроизводима + бандл проходит стаб-загрузчик
