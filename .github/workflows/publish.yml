@@ -5,9 +5,13 @@
 # gate — a tag that does not match the manifest version, or a bundle that is not
 # reproducible from the dictionary, must never reach the registry.
 #
-# Setup (once): add an npm automation token as the NPM_TOKEN repository secret.
+# Setup (once): add an npm token with "Bypass 2FA" as the NPM_TOKEN secret.
 #
-#   npm version patch && git push --follow-tags
+# Release with an ANNOTATED tag: `git push --follow-tags` only carries
+# annotated tags, so a lightweight `git tag v1.0.2` silently releases nothing.
+#
+#   npm version patch -m "Release %s"
+#   git push origin master --follow-tags
 name: publish
 
 on:
@@ -39,15 +43,12 @@ jobs:
             exit 1
           fi
 
-      # The dictionary is committed, so regenerating it must be a no-op; a diff
-      # means lib/client.js is stale relative to build/ru.json.
-      - name: Shipped bundle is reproducible
-        run: |
-          python3 tools/gen_dict_js.py
-          git diff --exit-code -- lib/client.js
-
-      - name: Bundle registers and activates
-        run: node test/run_bundle.mjs lib/client.js build/ru.json && node test/run_bundle_stale.mjs lib/client.js
+      # `build/` is a local artifact and is gitignored, so this job never has
+      # build/ru.json. The bundle test recovers the inlined dictionary from the
+      # committed artifact and re-renders it: that is the reproducibility claim
+      # here, and it also runs the bundle against the stub page loader.
+      - name: Shipped bundle is reproducible and activation works
+        run: npm test
 
       - name: Tarball carries only the runtime files
         run: npm publish --dry-run
