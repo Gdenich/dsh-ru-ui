@@ -54,32 +54,37 @@ case "$TOKEN" in
 esac
 
 # --- 1. Is the token recognised at all? -------------------------------------
+# Validity is checked the way npm itself checks it: an authenticated identity
+# read. The `/-/npm/v1/user` profile endpoint is deliberately NOT used as the
+# gate — a granular token scoped to packages answers it with 403 while being
+# perfectly valid, which would reject a working token.
 echo "Проверяю токен на реестре…"
-USER_RESPONSE="$(curl -s -w '\n%{http_code}' -H "Authorization: Bearer $TOKEN" \
-  https://registry.npmjs.org/-/npm/v1/user || true)"
-USER_STATUS="$(printf '%s' "$USER_RESPONSE" | tail -n1)"
-USER_BODY="$(printf '%s' "$USER_RESPONSE" | sed '$d')"
+# A temporary config file, because the npm env-var form of an auth key contains a
+# colon (`npm_config_//registry.npmjs.org/:_authToken`) and is not a legal shell
+# variable name. The file lives in a private temp dir and is removed on exit.
+PROBE_DIR="$(mktemp -d)"
+trap 'rm -rf "$PROBE_DIR"' EXIT
+printf 'registry=https://registry.npmjs.org/\n//registry.npmjs.org/:_authToken=%s\n' "$TOKEN" > "$PROBE_DIR/npmrc"
+chmod 600 "$PROBE_DIR/npmrc"
+WHOAMI="$(NPM_CONFIG_USERCONFIG="$PROBE_DIR/npmrc" npm whoami 2>"$PROBE_DIR/err" || true)"
+WHOAMI="$(trim "$WHOAMI")"
+WHOAMI_ERR="$(head -c 300 "$PROBE_DIR/err" 2>/dev/null || true)"
 
-if [ "$USER_STATUS" != "200" ]; then
+if [ -z "$WHOAMI" ]; then
   cat >&2 <<MSG
-error: реестр отклонил токен (HTTP $USER_STATUS).
-       Ответ реестра: $(printf '%s' "$USER_BODY" | head -c 300)
+error: реестр не подтвердил токен — npm whoami не вернул имя.
+       Ответ npm: ${WHOAMI_ERR:-<пусто>}
 
-Что это значит:
-  * 401 — токен недействителен: отозван, скопирован не целиком, либо это не токен;
-  * 403 — токен распознан, но прав не хватает.
-
-Токены npm имеют вид npm_ + 36 символов, всего 40. Если длина выше другая —
-вставка оборвалась, повторите.
+Причины по частоте:
+  * токен отозван или скопирован не целиком (нужно ровно 40 символов);
+  * это не токen npm (GitHub-токен, пароль, ключ другого реестра);
+  * токен выпущен для другого реестра.
 MSG
   exit 1
 fi
 
-WHOAMI="$(printf '%s' "$USER_BODY" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("name",""))' 2>/dev/null || true)"
-TFA="$(printf '%s' "$USER_BODY" | python3 -c 'import json,sys;print(json.dumps(json.load(sys.stdin).get("tfa")))' 2>/dev/null || echo '?')"
-
-echo "Токен действителен. Аккаунт: ${WHOAMI:-?}, 2FA на аккаунте: $TFA"
-if [ -n "$WHOAMI" ] && [ "$WHOAMI" != "$EXPECTED_USER" ]; then
+echo "Токен действителен. Аккаунт: $WHOAMI"
+if [ "$WHOAMI" != "$EXPECTED_USER" ]; then
   echo "warning: ожидался аккаунт $EXPECTED_USER, получен $WHOAMI — публикация уйдёт от другого имени" >&2
 fi
 
@@ -106,7 +111,7 @@ error: токен не может публиковать (HTTP $PROBE_STATUS).
     Packages   : Read and write
     Bypass 2FA : включить
 либо classic-токен типа Automation.
-На аккаунте должна быть включена 2FA — сейчас реестр сообщает tfa: $TFA.
+На аккаунте должна быть включена 2FA, иначе обход не выпускается.
 MSG
     exit 1
     ;;
